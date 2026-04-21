@@ -1,6 +1,7 @@
 import connectDB from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import FriendRequest from "@/lib/models/FriendRequest";
+import Conversation from "@/lib/models/Conversation"; 
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
@@ -14,16 +15,31 @@ export async function GET(req: Request) {
     }
 
     const user = await User.findById(userId).populate("friends", "username email avatar");
+    const friendsList = user?.friends || [];
+
+    const friendsWithLastMessage = await Promise.all(
+      friendsList.map(async (friend: any) => {
+        const conversation = await Conversation.findOne({
+          participants: { $all: [userId, friend._id] }
+        });
+
+        return {
+          ...friend.toObject(), 
+          lastMessage: conversation?.lastMessage || "Mulai obrolan..." 
+        };
+      })
+    );
     
     const requests = await FriendRequest.find({ receiver: userId, status: "pending" })
       .populate("sender", "username email avatar");
 
     return NextResponse.json({
-      friends: user?.friends || [],
+      friends: friendsWithLastMessage, 
       pendingRequests: requests || []
     }, { status: 200 });
 
   } catch (error: any) {
+    console.error("API Error:", error);
     return NextResponse.json({ message: "Server Error" }, { status: 500 });
   }
 }
