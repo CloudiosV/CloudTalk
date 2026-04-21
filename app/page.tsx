@@ -34,7 +34,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex min-h-screen w-full bg-white">
+    <div className="flex min-h-screen w-full font-sans bg-white">
       <Sidebar activeTab="chats" />
       <main className="flex-1 flex flex-col items-center justify-center bg-white">
         <div className="flex flex-col items-center text-center px-6">

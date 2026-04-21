@@ -9,13 +9,27 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab }: SidebarProps) {
+    // Inisialisasi state sebagai false dulu untuk menghindari error Hydration di Next.js
     const [isExpanded, setIsExpanded] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
-    // --- TAMBAHAN: State untuk menyimpan data user ---
     const [user, setUser] = useState<{username: string, email: string} | null>(null);
     const router = useRouter();
 
-    // --- TAMBAHAN: Ambil data profil dari API /api/auth/me ---
+    // --- TAMBAHAN: Load status dari localStorage saat pertama kali render ---
+    useEffect(() => {
+        const savedState = localStorage.getItem("sidebar-expanded");
+        if (savedState !== null) {
+            setIsExpanded(savedState === "true");
+        }
+    }, []);
+
+    // --- TAMBAHAN: Simpan status ke localStorage setiap kali isExpanded berubah ---
+    const toggleSidebar = () => {
+        const newState = !isExpanded;
+        setIsExpanded(newState);
+        localStorage.setItem("sidebar-expanded", String(newState));
+    };
+
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -31,12 +45,10 @@ export default function Sidebar({ activeTab }: SidebarProps) {
         fetchProfile();
     }, []);
 
-    // --- TAMBAHAN: Fungsi Logout ---
     const handleLogout = async () => {
         try {
             const res = await fetch("/api/auth/logout", { method: "POST" });
             if (res.ok) {
-                // Menggunakan window.location agar middleware melakukan validasi ulang secara penuh
                 window.location.href = "/auth"; 
             }
         } catch (error) {
@@ -55,7 +67,7 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                     <div className="px-4">
                         <div className="flex items-center justify-start gap-4 h-14">
                             <div 
-                                onClick={() => setIsExpanded(!isExpanded)}
+                                onClick={toggleSidebar} // Panggil fungsi toggle yang menyimpan ke localStorage
                                 className="bg-[#5D5FEF] h-14 w-14 min-w-[56px] rounded-[1.5rem] shadow-lg shadow-indigo-100 transform transition active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
                             >
                                 <Cloud className="text-white" size={24} fill="white" />
@@ -106,14 +118,12 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                     </nav>
                 </div>
 
-                {/* User Section / Settings */}
                 <div className="px-4 w-full relative">
                     {showSettings && (
                         <div className="absolute bottom-20 left-4 w-64 bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(93,95,239,0.15)] border border-indigo-50 overflow-hidden z-[60] animate-in fade-in slide-in-from-bottom-4 duration-300">
                             <div className="p-5 bg-indigo-50/50 border-b border-indigo-100/50">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-xl bg-[#5D5FEF] text-white flex items-center justify-center font-black text-lg uppercase">
-                                        {/* Tampilkan inisial atau tanda tanya jika belum ada data */}
                                         {user ? user.username[0] : "?"}
                                     </div>
                                     <div className="overflow-hidden">
@@ -125,7 +135,7 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                             </div>
                             <div className="p-2">
                                 <button 
-                                    onClick={handleLogout} // TAMBAHAN: Trigger Logout
+                                    onClick={handleLogout}
                                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-rose-50 text-rose-500 transition-colors"
                                 >
                                     <LogOut size={18} />
