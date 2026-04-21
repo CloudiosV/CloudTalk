@@ -56,13 +56,21 @@ export default function ChatRoom({ currentUser, friend }: ChatRoomProps) {
   useEffect(() => {
     if (!conversationId) return;
 
-    const socket = io();
+    const socket = io(window.location.origin);
     socketRef.current = socket;
-
-    socket.emit('join-room', conversationId);
+    
+    socket.on('connect', () => {
+      console.log('🟢 KONEK KE SERVER! Masuk ruangan:', conversationId);
+      socket.emit('join-room', conversationId);
+    });
 
     socket.on('pesan-baru', (pesan) => {
+      console.log('📩 ASYIK, ADA PESAN MASUK:', pesan);
       setDaftarPesan((prev) => [...prev, pesan]);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('🔴 YAH, SOCKET TERPUTUS!');
     });
 
     return () => {
@@ -156,7 +164,7 @@ export default function ChatRoom({ currentUser, friend }: ChatRoomProps) {
                 <div className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-sm ${
                   isSaya ? 'bg-[#5D5FEF] text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
                 }`}>
-                  <p className="text-[15px] leading-relaxed">{pesan.teks}</p>
+                  <p className="text-[15px] leading-relaxed break-words break-all">{pesan.teks}</p>
                   <span className={`text-[10px] block mt-1 text-right ${isSaya ? 'text-indigo-200' : 'text-gray-400'}`}>
                     {pesan.waktu}
                   </span>
