@@ -88,6 +88,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Friend request rejected" }, { status: 200 });
     }
 
+    if (action === "unfriend") {
+      const { userId, friendId } = body;
+
+      if (!userId || !friendId) {
+        return NextResponse.json({ message: "Missing User IDs" }, { status: 400 });
+      }
+
+      await Promise.all([
+        User.findByIdAndUpdate(userId, { $pull: { friends: friendId } }),
+        User.findByIdAndUpdate(friendId, { $pull: { friends: userId } }),
+        FriendRequest.deleteMany({
+          $or: [
+            { sender: userId, receiver: friendId },
+            { sender: friendId, receiver: userId }
+          ]
+        })
+      ]);
+
+      return NextResponse.json({ message: "Unfriended successfully" }, { status: 200 });
+    }
+
     return NextResponse.json({ message: "Invalid action type" }, { status: 400 });
 
   } catch (error: any) {
