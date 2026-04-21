@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import { Zap } from "lucide-react";
+import { Cloud } from "lucide-react";
 
 export default function Home() {
   const [user, setUser] = useState<{ username: string } | null>(null);
@@ -39,7 +39,7 @@ export default function Home() {
       <main className="flex-1 flex flex-col items-center justify-center bg-white">
         <div className="flex flex-col items-center text-center px-6">
           <div className="w-24 h-24 bg-indigo-50 rounded-[2rem] flex items-center justify-center mb-8">
-            <Zap size={44} className="text-[#5D5FEF]" fill="#5D5FEF" />
+            <Cloud size={44} className="text-[#5D5FEF]" fill="#5D5FEF" />
           </div>
           <h2 className="text-[2rem] font-black text-gray-900 mb-3 tracking-tight">
             Selamat Datang, {loading ? "..." : (user?.username || "Tamu")}!
