@@ -3,8 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-let socket: Socket;
-
 interface ChatRoomProps {
   currentUser: any;
   friend: any;
@@ -15,6 +13,8 @@ export default function ChatRoom({ currentUser, friend }: ChatRoomProps) {
   const [daftarPesan, setDaftarPesan] = useState<any[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const socketRef = useRef<Socket | null>(null);
 
   const [showSearch, setShowSearch] = useState(false);
   const [kataKunci, setKataKunci] = useState('');
@@ -56,7 +56,9 @@ export default function ChatRoom({ currentUser, friend }: ChatRoomProps) {
   useEffect(() => {
     if (!conversationId) return;
 
-    socket = io();
+    const socket = io();
+    socketRef.current = socket;
+
     socket.emit('join-room', conversationId);
 
     socket.on('pesan-baru', (pesan) => {
@@ -76,9 +78,9 @@ export default function ChatRoom({ currentUser, friend }: ChatRoomProps) {
 
   const handleKirimPesan = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pesanInput.trim() || !conversationId) return;
+    if (!pesanInput.trim() || !conversationId || !socketRef.current) return;
 
-    socket.emit('kirim-pesan', {
+    socketRef.current.emit('kirim-pesan', {
       conversationId: conversationId,
       senderId: currentUser.id,
       teks: pesanInput,
