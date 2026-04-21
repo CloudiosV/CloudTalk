@@ -34,19 +34,21 @@ export default function AuthPage() {
 
       if (res.ok) {
         if (isLogin) {
-          localStorage.setItem("user", JSON.stringify(data.user));
           setStatusMsg({ 
-            text: "Login Berhasil! Selamat datang " + data.user.username, 
+            text: "Login Berhasil! Mengalihkan...", 
             type: "success" 
           });
-          resetForm(); // Hapus form setelah login berhasil
+          
+          
+          window.location.href = "/"; 
+          
         } else {
           setStatusMsg({ 
             text: "Registrasi Berhasil! Silahkan login.", 
             type: "success" 
           });
           setIsLogin(true); 
-          resetForm(); // Hapus form setelah register berhasil
+          resetForm();
         }
       } else {
         setStatusMsg({ text: data.message, type: "error" });
@@ -64,7 +66,6 @@ export default function AuthPage() {
         
         {/* KIRI: BRANDING SPACE */}
         <div className="hidden md:flex w-[50%] p-16 flex-col justify-between items-start relative bg-gradient-to-br from-[#5D5FEF] to-[#4A4CD9] text-white">
-
           <div className="z-10">
             <h1 className="text-3xl font-black tracking-tighter">CloudTalk.</h1>
           </div>
@@ -175,7 +176,6 @@ export default function AuthPage() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );
