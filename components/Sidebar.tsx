@@ -46,7 +46,7 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                     <nav className="flex flex-col gap-4 w-full px-4">
                         {/* Nav: Messages - Pengecekan activeTab di sini */}
                         <Link 
-                            href="/messages"
+                            href="/chat"
                             className={`flex items-center justify-start gap-4 h-14 px-4 rounded-2xl transition-all duration-200 w-full ${
                                 activeTab === "chats" ? "bg-indigo-50 text-[#5D5FEF]" : "text-gray-300 hover:text-[#5D5FEF]"
                             }`}
@@ -61,7 +61,7 @@ export default function Sidebar({ activeTab }: SidebarProps) {
 
                         {/* Nav: Friends - Pengecekan activeTab di sini */}
                         <Link 
-                            href="/friends" 
+                            href="/friend" 
                             className={`flex items-center justify-start gap-4 h-14 px-4 rounded-2xl transition-all duration-200 w-full ${
                                 activeTab === "friends" ? "bg-indigo-50 text-[#5D5FEF]" : "text-gray-300 hover:text-[#5D5FEF]"
                             }`}
@@ -87,15 +87,10 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                                     </div>
                                     <div className="overflow-hidden">
                                         <p className="text-sm font-black text-gray-900 truncate">Nabil</p>
-                                        <p className="text-[10px] text-gray-400 font-bold tracking-wider">PREMIUM</p>
                                     </div>
                                 </div>
                             </div>
                             <div className="p-2">
-                                <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-indigo-50 text-gray-600 transition-colors">
-                                    <User size={18} />
-                                    <span className="text-xs font-bold">Profile</span>
-                                </button>
                                 <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-rose-50 text-rose-500 transition-colors">
                                     <LogOut size={18} />
                                     <span className="text-xs font-bold">Logout</span>
@@ -107,20 +102,17 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                     <button 
                         onClick={() => setShowSettings(!showSettings)}
                         className={`flex items-center justify-start gap-4 h-14 px-4 rounded-2xl transition-all duration-200 w-full ${
-                            showSettings ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-400 hover:bg-indigo-50"
+                            showSettings 
+                            ? "bg-indigo-50 text-[#5D5FEF]" 
+                            : "text-gray-300 hover:text-[#5D5FEF] hover:bg-indigo-50/50"
                         }`}
                     >
-                        <div className="relative shrink-0 flex items-center justify-center">
-                            <Settings 
-                                size={24} 
-                                className={`transition-transform duration-300 ${showSettings ? 'rotate-90 opacity-0' : ''}`} 
-                            />
-                            <div className={`absolute inset-0 flex items-center justify-center font-bold text-white transition-all duration-300 ${showSettings ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`}>
-                                N
-                            </div>
-                        </div>
+                        <Settings 
+                            size={24} 
+                            className={`shrink-0 transition-transform duration-300 ${showSettings ? 'rotate-90' : ''}`} 
+                        />
                         {isExpanded && (
-                            <span className="font-bold text-sm whitespace-nowrap animate-in fade-in duration-500">
+                            <span className="font-bold text-sm whitespace-nowrap animate-in fade-in duration-300">
                                 Settings
                             </span>
                         )}
