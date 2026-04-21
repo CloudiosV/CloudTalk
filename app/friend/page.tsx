@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
-import { Search, UserPlus, Check, X, Users, User as UserIcon } from 'lucide-react';
+import { Search, UserPlus, Check, X, Users, User as UserIcon, UserMinus } from 'lucide-react';
 
 export default function FriendPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -21,6 +21,32 @@ export default function FriendPage() {
       fetchFriendsAndRequests(parsedUser.id);
     }
   }, []);
+
+  const handleUnfriend = async (friendId: string) => {
+    if (!confirm("Are you sure you want to unfriend this user?")) return;
+
+    try {
+      const res = await fetch('/api/friend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: "unfriend", 
+          userId: currentUser.id, 
+          friendId 
+        })
+      });
+
+      if (res.ok) {
+        // Refresh data setelah berhasil
+        fetchFriendsAndRequests(currentUser.id);
+      } else {
+        const data = await res.json();
+        alert(data.message || "Failed to unfriend");
+      }
+    } catch (error) {
+      console.error("Unfriend error:", error);
+    }
+  };
 
   const fetchFriendsAndRequests = async (userId: string) => {
     try {
@@ -230,14 +256,23 @@ export default function FriendPage() {
               ) : (
                 <div className="space-y-3">
                   {myFriends.map((friend) => (
-                    <div key={friend._id} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition cursor-pointer">
-                      <div className="h-10 w-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold uppercase">
-                        {friend.username.charAt(0)}
+                    <div key={friend._id} className="flex items-center justify-between gap-3 p-3 hover:bg-gray-50 rounded-xl transition cursor-pointer">
+                      <div className='flex flex-row justify-between items-center gap-3'>
+                        <div className="h-10 w-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold uppercase">
+                          {friend.username.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-800">{friend.username}</p>
+                          <p className="text-xs text-gray-500">{friend.email}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-bold text-gray-800">{friend.username}</p>
-                        <p className="text-xs text-gray-500">{friend.email}</p>
-                      </div>
+                      <button 
+                        onClick={() => handleUnfriend(friend._id)}
+                        className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition"
+                        title="Unfriend"
+                      >
+                        <UserMinus size={18} />
+                      </button>
                     </div>
                   ))}
                 </div>
