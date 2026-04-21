@@ -5,6 +5,7 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   avatar?: string;
+  friends: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +30,12 @@ const userSchema = new Schema<IUser>(
       type: String,
       default: '', 
     },
+    friends: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      }
+    ],
   },
   {
     timestamps: true,
