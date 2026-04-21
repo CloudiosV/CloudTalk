@@ -7,32 +7,39 @@ export async function POST(req: Request) {
   try {
     await connectDB();
     
-    const body = await req.json();
-    const { username, email, password } = body;
+    const { username, email, password } = await req.json();
 
+    // Validasi kelengkapan data
     if (!username || !email || !password) {
-      return NextResponse.json({ message: "Data tidak lengkap" }, { status: 400 });
+      return NextResponse.json({ message: "Semua field harus diisi" }, { status: 400 });
     }
 
-    const userExists = await User.findOne({ $or: [{ email }, { username }] });
-    if (userExists) {
-      return NextResponse.json({ message: "User sudah terdaftar" }, { status: 400 });
+    // Cek apakah email atau username sudah digunakan
+    const existingUser = await User.findOne({ 
+      $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] 
+    });
+
+    if (existingUser) {
+      const isEmailDup = existingUser.email === email.toLowerCase();
+      return NextResponse.json({ 
+        message: isEmailDup ? "Email sudah digunakan" : "Username sudah digunakan" 
+      }, { status: 400 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12); // Salt round 12 lebih aman
 
+    // Simpan user baru
     await User.create({
-      username,
-      email,
+      username: username.toLowerCase(),
+      email: email.toLowerCase(),
       password: hashedPassword,
     });
 
     return NextResponse.json({ message: "Registrasi Berhasil!" }, { status: 201 });
 
   } catch (error: any) {
-
-    console.error("DETEKSI ERROR:", error.message);
-    return NextResponse.json({ message: error.message }, { status: 500 });
-
+    console.error("Register Error:", error.message);
+    return NextResponse.json({ message: "Gagal membuat akun, coba lagi nanti" }, { status: 500 });
   }
 }
