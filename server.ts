@@ -63,6 +63,14 @@ app.prepare().then(() => {
       }
     });
 
+    socket.on('send-friend-request', (data) => {
+      io.emit('new-friend-request', data);
+    });
+
+    socket.on('accept-friend-request', (data) => {
+      io.emit('friend-request-accepted', data);
+    });
+
     socket.on('disconnect', () => {
       console.log(`🔴 User terputus: ${socket.id}`);
     });
