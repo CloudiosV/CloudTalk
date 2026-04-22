@@ -71,6 +71,10 @@ app.prepare().then(() => {
       io.emit('friend-request-accepted', data);
     });
 
+    socket.on('friend-data-updated', (data) => {
+      io.emit('refresh-friend-data', data);
+    });
+
     socket.on('disconnect', () => {
       console.log(`🔴 User terputus: ${socket.id}`);
     });
