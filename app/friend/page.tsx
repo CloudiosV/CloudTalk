@@ -176,7 +176,7 @@ export default function FriendPage() {
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><Search className="text-[#5D5FEF]" size={24} />Find New Friends</h2>
               <div className="flex gap-2 mb-6">
-                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Username or email..." className="flex-1 px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5D5FEF]/50" onKeyDown={(e) => e.key === 'Enter' && handleSearch()} />
+                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Username or email..." className="flex-1 px-4 py-3 bg-gray-50 text-gray-600 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5D5FEF]/50" onKeyDown={(e) => e.key === 'Enter' && handleSearch()} />
                 <button onClick={handleSearch} disabled={isLoading} className="px-6 py-3 bg-[#5D5FEF] text-white font-bold rounded-xl transition active:scale-95 disabled:opacity-50">{isLoading ? '...' : 'Search'}</button>
               </div>
               <div className="space-y-3">
