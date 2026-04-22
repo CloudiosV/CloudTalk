@@ -43,9 +43,10 @@ export default function FriendPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           action: "unfriend", 
-          userId: currentUser.id, 
+          userId: currentUser._id || currentUser.id, 
           friendId 
-        })
+        }),
+        credentials: 'include'
       });
 
       if (res.ok) {
@@ -103,9 +104,10 @@ export default function FriendPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: "send_request",
-          senderId: currentUser.id,
+          senderId: currentUser._id || currentUser.id,
           receiverId: receiverId
-        })
+        }),
+        credentials: 'include'
       });
       const data = await res.json();
       alert(data.message);
