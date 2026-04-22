@@ -96,7 +96,7 @@ export default function ChatRoom({ currentUser, friend }: ChatRoomProps) {
 
     socketRef.current.emit('kirim-pesan', {
       conversationId: conversationId,
-      senderId: currentUser.id,
+      senderId: currentUser.id || currentUser._id,
       teks: pesanInput,
     });
 
