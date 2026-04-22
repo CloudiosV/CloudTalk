@@ -7,8 +7,8 @@ import Message from './lib/models/Message';
 import Conversation from './lib/models/Conversation';
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
-const port = 3000;
+const hostname = process.env.HOSTNAME || '0.0.0.0'; 
+const port = parseInt(process.env.PORT || '3002', 10); 
 
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
