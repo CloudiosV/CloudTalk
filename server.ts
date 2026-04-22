@@ -15,7 +15,13 @@ const handler = app.getRequestHandler();
 
 app.prepare().then(() => {
   const httpServer = createServer(handler);
-  const io = new Server(httpServer);
+  const io = new Server(httpServer, {
+    cors: {
+      origin: "http://43.157.229.130:3002",
+      methods: ["GET", "POST"],
+      credentials: true
+    }
+  });
 
   io.on('connection', (socket) => {
     console.log(`🟢 User terkoneksi: ${socket.id}`);

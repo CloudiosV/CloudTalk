@@ -58,7 +58,11 @@ export default function ChatRoom({ currentUser, friend }: ChatRoomProps) {
   useEffect(() => {
     if (!conversationId) return;
 
-    const socket = io(window.location.origin);
+    const socket = io("http://43.157.229.130:3002", {
+      withCredentials: true,
+      transports: ['websocket', 'polling']
+    });
+
     socketRef.current = socket;
     
     socket.on('connect', () => {
