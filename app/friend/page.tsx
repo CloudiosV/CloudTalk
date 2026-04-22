@@ -14,12 +14,24 @@ export default function FriendPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setCurrentUser(parsedUser);
-      fetchFriendsAndRequests(parsedUser.id);
-    }
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+
+        if (res.ok && data.user) {
+          setCurrentUser(data.user);
+          fetchFriendsAndRequests(data.user._id || data.user.id);
+          localStorage.setItem("user", JSON.stringify(data.user));
+        } else {
+          window.location.href = "/auth";
+        }
+      } catch (error) {
+        console.error("Gagal verifikasi auth");
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const handleUnfriend = async (friendId: string) => {
@@ -50,7 +62,7 @@ export default function FriendPage() {
 
   const fetchFriendsAndRequests = async (userId: string) => {
     try {
-      const res = await fetch(`/api/friend?userId=${userId}`);
+      const res = await fetch(`/api/friend?userId=${userId}`, {credentials: 'include'});
       const data = await res.json();
       if (res.ok) {
         setMyFriends(data.friends);

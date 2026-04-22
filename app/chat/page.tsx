@@ -10,19 +10,30 @@ export default function ChatPage() {
   const [friends, setFriends] = useState<any[]>([]);
   const [selectedFriend, setSelectedFriend] = useState<any>(null);
 
-  // Ambil data User & Temannya saat halaman dibuka
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setCurrentUser(parsedUser);
-      fetchFriends(parsedUser.id);
-    }
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+
+        if (res.ok && data.user) {
+          setCurrentUser(data.user);
+          fetchFriends(data.user._id || data.user.id);
+          localStorage.setItem("user", JSON.stringify(data.user));
+        } else {
+          window.location.href = "/auth";
+        }
+      } catch (error) {
+        console.error("Gagal verifikasi auth");
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const fetchFriends = async (userId: string) => {
     try {
-      const res = await fetch(`/api/friend?userId=${userId}`);
+      const res = await fetch(`/api/friend?userId=${userId}`, {credentials: 'include'});
       const data = await res.json();
       if (res.ok) setFriends(data.friends);
     } catch (error) {
