@@ -164,7 +164,10 @@ export default function ChatRoom({ currentUser, friend }: ChatRoomProps) {
           )}
 
           {pesanYangDitampilkan.map((pesan, index) => {
-            const isSaya = pesan.senderId === currentUser.id;
+            const senderIdStr = pesan.senderId?.toString();
+            const currentUserIdStr = (currentUser?.id || currentUser?._id)?.toString();
+
+            const isSaya = senderIdStr === currentUserIdStr;
             return (
               <div key={index} className={`flex ${isSaya ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-sm ${
