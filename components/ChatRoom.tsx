@@ -21,12 +21,14 @@ export default function ChatRoom({ currentUser, friend }: ChatRoomProps) {
 
   useEffect(() => {
     const fetchChatHistory = async () => {
+      if (!currentUser?.id && !currentUser?._id) return;
+
       try {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            senderId: currentUser.id,
+            senderId: currentUser.id || currentUser._id,
             receiverId: friend._id
           })
         });
