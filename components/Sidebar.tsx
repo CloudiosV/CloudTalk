@@ -11,11 +11,9 @@ interface SidebarProps {
 export default function Sidebar({ activeTab }: SidebarProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
-    // --- TAMBAHAN: State untuk menyimpan data user ---
     const [user, setUser] = useState<{username: string, email: string} | null>(null);
     const router = useRouter();
 
-    // --- TAMBAHAN: Ambil data profil dari API /api/auth/me ---
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -31,7 +29,6 @@ export default function Sidebar({ activeTab }: SidebarProps) {
         fetchProfile();
     }, []);
 
-    // --- TAMBAHAN: Fungsi Logout ---
     const handleLogout = async () => {
         try {
             const res = await fetch("/api/auth/logout", { method: "POST" });
@@ -79,7 +76,7 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                         <Link 
                             href="/chat"
                             className={`flex items-center justify-start gap-4 h-14 px-4 rounded-2xl transition-all duration-200 w-full ${
-                                activeTab === "chats" ? "bg-indigo-50 text-[#5D5FEF]" : "text-gray-300 hover:text-[#5D5FEF]"
+                                activeTab === "chats" ? "bg-indigo-50 text-[#5D5FEF]" : "text-gray-500 hover:text-[#5D5FEF]"
                             }`}
                         >
                             <MessageSquare size={24} className="shrink-0" />
@@ -93,7 +90,7 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                         <Link 
                             href="/friend" 
                             className={`flex items-center justify-start gap-4 h-14 px-4 rounded-2xl transition-all duration-200 w-full ${
-                                activeTab === "friends" ? "bg-indigo-50 text-[#5D5FEF]" : "text-gray-300 hover:text-[#5D5FEF]"
+                                activeTab === "friends" ? "bg-indigo-50 text-[#5D5FEF]" : "text-gray-500 hover:text-[#5D5FEF]"
                             }`}
                         >
                             <Users size={24} className="shrink-0" />
@@ -140,7 +137,7 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                         className={`flex items-center justify-start gap-4 h-14 px-4 rounded-2xl transition-all duration-200 w-full ${
                             showSettings 
                             ? "bg-indigo-50 text-[#5D5FEF]" 
-                            : "text-gray-300 hover:text-[#5D5FEF] hover:bg-indigo-50/50"
+                            : "text-gray-500 hover:text-[#5D5FEF] hover:bg-indigo-50/50"
                         }`}
                     >
                         <Settings 
