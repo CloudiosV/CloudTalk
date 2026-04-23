@@ -83,15 +83,14 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "User ID is required" }, { status: 400 });
     }
 
-    const groups = await Conversation.find({
-      isGroup: true,
+    const conversations = await Conversation.find({
       participants: userId
-    }).sort({ updatedAt: -1 }); 
+    }).sort({ updatedAt: -1 });
 
-    return NextResponse.json({ groups }, { status: 200 });
+    return NextResponse.json({ conversations }, { status: 200 });
 
   } catch (error) {
-    console.error("Fetch Groups Error:", error);
+    console.error("Fetch Conversations Error:", error);
     return NextResponse.json({ message: "Server Error" }, { status: 500 });
   }
 }
