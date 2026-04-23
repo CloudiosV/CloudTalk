@@ -7,15 +7,21 @@ import Message from './lib/models/Message';
 import Conversation from './lib/models/Conversation';
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
-const port = 3000;
+const hostname = process.env.HOSTNAME || '0.0.0.0'; 
+const port = parseInt(process.env.PORT || '3002', 10); 
 
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 
 app.prepare().then(() => {
   const httpServer = createServer(handler);
-  const io = new Server(httpServer);
+  const io = new Server(httpServer, {
+    cors: {
+      origin: "http://43.157.229.130:3002",
+      methods: ["GET", "POST"],
+      credentials: true
+    }
+  });
 
   io.on('connection', (socket) => {
     console.log(`🟢 User terkoneksi: ${socket.id}`);
@@ -55,6 +61,18 @@ app.prepare().then(() => {
       } catch (error) {
         console.error('Gagal menyimpan chat:', error);
       }
+    });
+
+    socket.on('send-friend-request', (data) => {
+      io.emit('new-friend-request', data);
+    });
+
+    socket.on('accept-friend-request', (data) => {
+      io.emit('friend-request-accepted', data);
+    });
+
+    socket.on('friend-data-updated', (data) => {
+      io.emit('refresh-friend-data', data);
     });
 
     socket.on('disconnect', () => {

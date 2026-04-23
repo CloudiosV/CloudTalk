@@ -2,7 +2,7 @@ import connectDB from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
-import { SignJWT } from "jose"; // Gunakan jose agar sinkron dengan middleware
+import { SignJWT } from "jose";
 
 export async function POST(req: Request) {
   try {
@@ -44,8 +44,8 @@ export async function POST(req: Request) {
 
     response.cookies.set("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: false,
+      sameSite: "lax",
       maxAge: 60 * 60 * 24,
       path: "/",
     });

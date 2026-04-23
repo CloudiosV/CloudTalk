@@ -28,10 +28,8 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12); // Salt round 12 lebih aman
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Simpan user baru
     await User.create({
       username: username.toLowerCase(),
       email: email.toLowerCase(),

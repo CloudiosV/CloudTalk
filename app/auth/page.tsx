@@ -71,7 +71,6 @@ export default function AuthPage() {
     <div className="flex h-screen w-full items-center justify-center bg-[#F3F1FF] p-4 font-sans">
       <div className="flex w-full max-w-6xl min-h-[600px] bg-white/60 backdrop-blur-lg rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(93,95,239,0.1)]">
         
-        {/* KIRI: BRANDING SPACE */}
         <div className="hidden md:flex w-[50%] p-16 flex-col justify-between items-start relative bg-gradient-to-br from-[#5D5FEF] to-[#4A4CD9] text-white">
           <div className="z-10">
             <h1 className="text-3xl font-black tracking-tighter">CloudTalk.</h1>
@@ -94,7 +93,6 @@ export default function AuthPage() {
           </div>
         </div>
 
-        {/* KANAN: FORM INTERAKTIF */}
         <div className="w-full md:w-[50%] p-8 md:p-20 flex flex-col justify-center bg-white">
           <div className="max-w-sm mx-auto w-full">
             
@@ -107,7 +105,6 @@ export default function AuthPage() {
               </p>
             </div>
 
-            {/* NOTIFIKASI UI */}
             {statusMsg.text && (
               <div className={`mb-6 p-4 rounded-2xl text-sm font-medium animate-in fade-in slide-in-from-top-4 duration-300 ${
                 statusMsg.type === "success" 
