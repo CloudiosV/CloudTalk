@@ -9,13 +9,11 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab }: SidebarProps) {
-    // Inisialisasi state sebagai false dulu untuk menghindari error Hydration di Next.js
     const [isExpanded, setIsExpanded] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [user, setUser] = useState<{username: string, email: string} | null>(null);
     const router = useRouter();
 
-    // --- TAMBAHAN: Load status dari localStorage saat pertama kali render ---
     useEffect(() => {
         const savedState = localStorage.getItem("sidebar-expanded");
         if (savedState !== null) {
@@ -23,7 +21,6 @@ export default function Sidebar({ activeTab }: SidebarProps) {
         }
     }, []);
 
-    // --- TAMBAHAN: Simpan status ke localStorage setiap kali isExpanded berubah ---
     const toggleSidebar = () => {
         const newState = !isExpanded;
         setIsExpanded(newState);
@@ -67,7 +64,7 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                     <div className="px-4">
                         <div className="flex items-center justify-start gap-4 h-14">
                             <div 
-                                onClick={toggleSidebar} // Panggil fungsi toggle yang menyimpan ke localStorage
+                                onClick={toggleSidebar}
                                 className="bg-[#5D5FEF] h-14 w-14 min-w-[56px] rounded-[1.5rem] shadow-lg shadow-indigo-100 transform transition active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
                             >
                                 <Cloud className="text-white" size={24} fill="white" />

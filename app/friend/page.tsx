@@ -14,7 +14,6 @@ export default function FriendPage() {
   const [isLoading, setIsLoading] = useState(false);
   const socketRef = useRef<Socket | null>(null);
 
-  // 1. Inisialisasi Socket & Listener Real-time
   useEffect(() => {
     if (!currentUser) return;
     const myId = currentUser._id || currentUser.id;
@@ -23,7 +22,6 @@ export default function FriendPage() {
     socketRef.current = socket;
 
     socket.on('refresh-friend-data', (data) => {
-      // Jika saya adalah pengirim ATAU penerima, tarik data terbaru dari DB
       if (data.senderId === myId || data.receiverId === myId) {
         console.log("🔄 Update data pertemanan real-time...");
         fetchFriendsAndRequests(myId);
@@ -33,7 +31,6 @@ export default function FriendPage() {
     return () => { socket.disconnect(); };
   }, [currentUser]);
 
-  // 2. Auth Check
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -66,7 +63,6 @@ export default function FriendPage() {
     }
   };
 
-  // HELPER: Emit sinyal update ke socket
   const emitUpdate = (otherId: string) => {
     const myId = currentUser._id || currentUser.id;
     socketRef.current?.emit('friend-data-updated', {
@@ -103,7 +99,7 @@ export default function FriendPage() {
         credentials: 'include'
       });
       if (res.ok) {
-        emitUpdate(senderId); // Beritahu si pengirim kalau kita sudah terima
+        emitUpdate(senderId);
         fetchFriendsAndRequests(currentUser._id || currentUser.id);
       }
     } catch (error) { console.error("Error accept"); }
@@ -138,7 +134,7 @@ export default function FriendPage() {
         credentials: 'include'
       });
       if (res.ok) {
-        emitUpdate(friendId); // Beritahu mantan teman agar namanya hilang di dia juga
+        emitUpdate(friendId);
         fetchFriendsAndRequests(currentUser._id || currentUser.id);
       }
     } catch (error) { console.error("Error unfriend"); }

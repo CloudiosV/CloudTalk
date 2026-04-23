@@ -9,12 +9,10 @@ export async function POST(req: Request) {
     
     const { username, email, password } = await req.json();
 
-    // Validasi kelengkapan data
     if (!username || !email || !password) {
       return NextResponse.json({ message: "Semua field harus diisi" }, { status: 400 });
     }
 
-    // Cek apakah email atau username sudah digunakan
     const existingUser = await User.findOne({ 
       $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] 
     });
@@ -26,10 +24,8 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12); // Salt round 12 lebih aman
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Simpan user baru
     await User.create({
       username: username.toLowerCase(),
       email: email.toLowerCase(),

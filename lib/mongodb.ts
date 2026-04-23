@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 
-// Memberi tahu TypeScript bahwa kita punya variabel global bernama mongoose
 declare global {
   var mongoose: any;
 }
@@ -11,7 +10,6 @@ if (!MONGODB_URI) {
   throw new Error('Tolong masukkan MONGODB_URI di dalam file .env');
 }
 
-// Global variable agar koneksi di-cache saat proses development
 let cached = global.mongoose;
 
 if (!cached) {

@@ -15,7 +15,6 @@ export default function Home() {
           const data = await res.json();
           setUser(data.user);
         } else {
-          // Jika gagal (mungkin cookie belum terbaca), coba sekali lagi setelah 500ms
           setTimeout(async () => {
             const retryRes = await fetch("/api/auth/me");
             if (retryRes.ok) {

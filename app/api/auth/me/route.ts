@@ -15,7 +15,6 @@ export async function GET() {
 
     if (!token) return NextResponse.json({ message: "No token" }, { status: 401 });
 
-    // Pastikan SECRET terbaca
     const secretKey = process.env.JWT_SECRET;
     if (!secretKey) {
       console.log("ERROR: JWT_SECRET tidak terbaca di .env!");
@@ -24,7 +23,6 @@ export async function GET() {
 
     const secret = new TextEncoder().encode(secretKey);
     
-    // Verifikasi
     const { payload } = await jwtVerify(token, secret);
     console.log("Payload ID:", payload.id);
 
