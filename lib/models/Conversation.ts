@@ -2,6 +2,9 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IConversation extends Document {
   participants: mongoose.Types.ObjectId[];
+  isGroup: boolean;           
+  groupName?: string;          
+  groupAdmin?: mongoose.Types.ObjectId; 
   lastMessage?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -9,20 +12,13 @@ export interface IConversation extends Document {
 
 const conversationSchema = new Schema<IConversation>(
   {
-    participants: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
-    lastMessage: {
-      type: String,
-      default: '',
-    },
+    participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    isGroup: { type: Boolean, default: false },
+    groupName: { type: String, default: '' },
+    groupAdmin: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    lastMessage: { type: String, default: '' },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 const Conversation = mongoose.models.Conversation || mongoose.model<IConversation>('Conversation', conversationSchema);
