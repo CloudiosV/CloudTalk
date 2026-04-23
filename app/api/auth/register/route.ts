@@ -7,14 +7,16 @@ export async function POST(req: Request) {
   try {
     await connectDB();
     
-    const { username, email, password } = await req.json();
+    const { username, email, password, confirmPassword } = await req.json();
 
-    // Validasi kelengkapan data
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !confirmPassword) {
       return NextResponse.json({ message: "Semua field harus diisi" }, { status: 400 });
     }
 
-    // Cek apakah email atau username sudah digunakan
+    if (password !== confirmPassword) {
+      return NextResponse.json({ message: "Password dan konfirmasi tidak cocok" }, { status: 400 });
+    }
+
     const existingUser = await User.findOne({ 
       $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }] 
     });
