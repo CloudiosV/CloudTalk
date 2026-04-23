@@ -7,10 +7,14 @@ export async function POST(req: Request) {
   try {
     await connectDB();
     
-    const { username, email, password } = await req.json();
+    const { username, email, password, confirmPassword } = await req.json();
 
-    if (!username || !email || !password) {
+    if (!username || !email || !password || !confirmPassword) {
       return NextResponse.json({ message: "Semua field harus diisi" }, { status: 400 });
+    }
+
+    if (password !== confirmPassword) {
+      return NextResponse.json({ message: "Password dan konfirmasi tidak cocok" }, { status: 400 });
     }
 
     const existingUser = await User.findOne({ 

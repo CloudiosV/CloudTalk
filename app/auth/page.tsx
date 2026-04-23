@@ -1,23 +1,33 @@
 "use client";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react"; // Import icon mata
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // State untuk toggle mata
   const [statusMsg, setStatusMsg] = useState({ text: "", type: "" }); 
   
   const [formData, setFormData] = useState({ 
     username: "", 
     email: "", 
-    password: "" 
+    password: "",
+    confirmPassword: "" // Tambahkan field konfirmasi
   });
 
   const resetForm = () => {
-    setFormData({ username: "", email: "", password: "" });
+    setFormData({ username: "", email: "", password: "", confirmPassword: "" });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validasi tambahan: Cek kecocokan password saat register
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      setStatusMsg({ text: "Password tidak cocok!", type: "error" });
+      return;
+    }
+
     setLoading(true);
     setStatusMsg({ text: "", type: "" }); 
     
@@ -38,10 +48,7 @@ export default function AuthPage() {
             text: "Login Berhasil! Mengalihkan...", 
             type: "success" 
           });
-          
-          
           window.location.href = "/"; 
-          
         } else {
           setStatusMsg({ 
             text: "Registrasi Berhasil! Silahkan login.", 
@@ -138,15 +145,40 @@ export default function AuthPage() {
 
               <div>
                 <label className="text-xs font-bold text-gray-400 ml-2 mb-1 block uppercase tracking-wider">Password</label>
-                <input 
-                  type="password" 
-                  placeholder="••••••••"
-                  value={formData.password}
-                  required
-                  className="w-full px-6 py-4 rounded-2xl bg-[#F8F9FD] border-2 border-transparent focus:border-[#5D5FEF] focus:bg-white outline-none transition-all text-sm text-gray-700 placeholder:text-gray-300"
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                />
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="••••••••"
+                    value={formData.password}
+                    required
+                    className="w-full px-6 py-4 rounded-2xl bg-[#F8F9FD] border-2 border-transparent focus:border-[#5D5FEF] focus:bg-white outline-none transition-all text-sm text-gray-700 placeholder:text-gray-300"
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  />
+                  {/* Icon Mata */}
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#5D5FEF] transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
+
+              {/* Confirm Password Field (Hanya muncul saat Register) */}
+              {!isLogin && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                  <label className="text-xs font-bold text-gray-400 ml-2 mb-1 block uppercase tracking-wider">Confirm Password</label>
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="••••••••"
+                    value={formData.confirmPassword}
+                    required={!isLogin}
+                    className="w-full px-6 py-4 rounded-2xl bg-[#F8F9FD] border-2 border-transparent focus:border-[#5D5FEF] focus:bg-white outline-none transition-all text-sm text-gray-700 placeholder:text-gray-300"
+                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                  />
+                </div>
+              )}
 
               <button 
                 disabled={loading}
@@ -165,6 +197,7 @@ export default function AuthPage() {
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setStatusMsg({ text: "", type: "" });
+                  setShowPassword(false); // Reset mata saat pindah mode
                 }}
                 className="ml-2 text-[#5D5FEF] font-extrabold hover:text-[#4d4fdf] transition-colors underline decoration-2 underline-offset-8"
               >
