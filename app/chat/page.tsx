@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from '@/components/Sidebar';
 import ChatRoom from '@/components/ChatRoom';
-import { MessageSquare, Plus, X, Users as UsersIcon, Check } from 'lucide-react'; // BARU: Import Check buat Toast
+import { MessageSquare, Plus, X, Users as UsersIcon, Check, Search } from 'lucide-react'; // BARU: Tambah icon Search
 import { io, Socket } from 'socket.io-client';
 
 export default function ChatPage() {
@@ -21,8 +21,10 @@ export default function ChatPage() {
   const [selectedFriendsForGroup, setSelectedFriendsForGroup] = useState<string[]>([]);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
 
-  // BARU: State Toast
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  
+  const [searchChatQuery, setSearchChatQuery] = useState('');
+
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000); 
@@ -77,14 +79,12 @@ export default function ChatPage() {
             socket.emit('register-user', userId);
           });
 
-          // BARU: Dengerin sinyal jika ada yang accept friend request
           socket.on('refresh-friend-data', (payload) => {
             if (payload.senderId === userId || payload.receiverId === userId) {
               fetchFriendsAndGroups(userId);
             }
           });
 
-          // BARU: Dengerin sinyal jika kita di-invite ke grup baru
           socket.on('refresh-chat-list', () => {
             fetchFriendsAndGroups(userId);
           });
@@ -184,11 +184,10 @@ export default function ChatPage() {
         })
       });
       if (res.ok) {
-        showToast("Grup berhasil dibuat!"); // BARU: Pake Toast
+        showToast("Grup berhasil dibuat!"); 
         setShowGroupModal(false);
         setNewGroupName('');
         
-        // BARU: Emit socket untuk auto-refresh layar semua member grup
         socketRef.current?.emit('new-group-created', [...selectedFriendsForGroup, adminId]);
 
         setSelectedFriendsForGroup([]);
@@ -200,10 +199,17 @@ export default function ChatPage() {
 
   if (!currentUser) return <div className="p-8 text-center">Loading...</div>;
 
+  const filteredGroups = myGroups.filter(group => 
+    group.groupName.toLowerCase().includes(searchChatQuery.toLowerCase())
+  );
+  
+  const filteredFriends = friends.filter(friend => 
+    friend.username.toLowerCase().includes(searchChatQuery.toLowerCase())
+  );
+
   return (
     <div className="flex flex-col-reverse md:flex-row h-screen bg-gray-50 font-sans overflow-hidden relative">
       
-      {/* BARU: TOAST NOTIFICATION DI HALAMAN CHAT */}
       {toast && (
         <div className={`absolute top-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-in slide-in-from-top-5 fade-in duration-300 ${toast.type === 'success' ? 'bg-[#5D5FEF] text-white' : 'bg-rose-500 text-white'}`}>
           {toast.type === 'success' ? <Check size={20} /> : <X size={20} />}
@@ -226,12 +232,25 @@ export default function ChatPage() {
             <Plus size={20} />
           </button>
         </div>
+
+        <div className="px-4 md:px-6 pt-4 shrink-0">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" size={18} />
+            <input 
+              type="text" 
+              placeholder="Cari obrolan..." 
+              value={searchChatQuery}
+              onChange={(e) => setSearchChatQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5D5FEF]/50 text-sm text-gray-700 transition-all"
+            />
+          </div>
+        </div>
         
         <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4">
-          {myGroups.length > 0 && (
+          {filteredGroups.length > 0 && (
             <div>
               <h3 className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Grup Saya</h3>
-              {myGroups.map((group) => {
+              {filteredGroups.map((group) => {
                 const unread = unreadCounts[group._id] || 0;
                 return (
                   <div 
@@ -265,10 +284,10 @@ export default function ChatPage() {
 
           <div>
             <h3 className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Teman Private</h3>
-            {friends.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center mt-4">Belum ada teman.</p>
+            {filteredFriends.length === 0 ? (
+              <p className="text-gray-400 text-sm text-center mt-4">Tidak ada teman ditemukan.</p>
             ) : (
-              friends.map((friend) => {
+              filteredFriends.map((friend) => {
                 const unread = unreadCounts[friend._id] || 0;
                 return (
                   <div 
@@ -306,16 +325,15 @@ export default function ChatPage() {
         {activeChat ? (
           <ChatRoom currentUser={currentUser} activeChat={activeChat} onBack={() => setActiveChat(null)} /> 
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
+          <div className="flex-1 flex flex-col items-center justify-center text-gray-600">
             <div className="h-24 w-24 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
-              <MessageSquare size={40} className="text-gray-300" />
+              <MessageSquare size={40} className="text-gray-500" />
             </div>
             <p className="font-medium text-sm md:text-base">Pilih teman atau grup untuk mulai mengobrol</p>
           </div>
         )}
       </main>
 
-      {/* MODAL BIKIN GRUP */}
       {showGroupModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl animate-in zoom-in-95">
@@ -329,7 +347,7 @@ export default function ChatPage() {
               placeholder="Nama Grup..."
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl mb-4 focus:ring-2 focus:ring-[#5D5FEF]" // BARU: text-gray-600
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl mb-4 focus:ring-2 focus:ring-[#5D5FEF]" 
             />
 
             <p className="text-sm font-bold text-gray-500 mb-2">Pilih Anggota:</p>
@@ -342,7 +360,7 @@ export default function ChatPage() {
                     onChange={() => toggleFriendSelection(f._id)}
                     className="w-5 h-5 rounded text-[#5D5FEF]"
                   />
-                  <span className="font-medium text-gray-600 text-sm">{f.username}</span> {/* BARU: text-gray-600 */}
+                  <span className="font-medium text-gray-600 text-sm">{f.username}</span> 
                 </label>
               ))}
             </div>
