@@ -1,14 +1,15 @@
 "use client";
 import { useState, useEffect } from "react"; 
-import { Cloud, MessageSquare, Users, LogOut, Settings, User } from "lucide-react";
+import { Cloud, MessageSquare, Users, LogOut, Settings } from "lucide-react";
 import Link from 'next/link';
 import { useRouter } from "next/navigation"; 
 
 interface SidebarProps {
     activeTab: "chats" | "friends";
+    onMobileItemClick?: () => void; // TAMBAHAN: untuk tutup sidebar di mobile
 }
 
-export default function Sidebar({ activeTab }: SidebarProps) {
+export default function Sidebar({ activeTab, onMobileItemClick }: SidebarProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [user, setUser] = useState<{username: string, email: string} | null>(null);
@@ -53,19 +54,26 @@ export default function Sidebar({ activeTab }: SidebarProps) {
         }
     };
 
+    // Fungsi untuk handle klik menu (tutup sidebar di mobile)
+    const handleMenuClick = () => {
+        if (onMobileItemClick) {
+            onMobileItemClick();
+        }
+    };
+
     return (
         <div className="flex h-screen relative z-50">
             <aside 
                 className={`${
                     isExpanded ? "w-64" : "w-24"
-                } bg-white border-r border-indigo-50 flex flex-col py-8 justify-between shrink-0 transition-all duration-300 ease-in-out relative`}
+                } bg-white border-r border-indigo-50 flex flex-col py-8 justify-between shrink-0 transition-all duration-300 ease-in-out relative h-full`}
             >
                 <div className="flex flex-col w-full overflow-hidden">
                     <div className="px-4">
                         <div className="flex items-center justify-start gap-4 h-14">
                             <div 
                                 onClick={toggleSidebar}
-                                className="bg-[#5D5FEF] h-14 w-14 min-w-[56px] rounded-[1.5rem] shadow-lg shadow-indigo-100 transform transition active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
+                                className="bg-[#5D5FEF] h-14 w-14 min-w-[56px] rounded-[1.5rem] shadow-lg shadow-indigo-100 transform transition-all duration-300 active:scale-95 hover:scale-105 cursor-pointer flex items-center justify-center shrink-0"
                             >
                                 <Cloud className="text-white" size={24} fill="white" />
                             </div>
@@ -87,11 +95,12 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                     <nav className="flex flex-col gap-4 w-full px-4">
                         <Link 
                             href="/chat"
-                            className={`flex items-center justify-start gap-4 h-14 px-4 rounded-2xl transition-all duration-200 w-full ${
-                                activeTab === "chats" ? "bg-indigo-50 text-[#5D5FEF]" : "text-gray-300 hover:text-[#5D5FEF]"
+                            onClick={handleMenuClick}
+                            className={`flex items-center justify-start gap-4 h-14 px-4 rounded-2xl transition-all duration-200 w-full group ${
+                                activeTab === "chats" ? "bg-indigo-50 text-[#5D5FEF]" : "text-gray-300 hover:text-[#5D5FEF] hover:bg-indigo-50/50"
                             }`}
                         >
-                            <MessageSquare size={24} className="shrink-0" />
+                            <MessageSquare size={24} className="shrink-0 transition-transform duration-200 group-hover:scale-110" />
                             {isExpanded && (
                                 <span className="font-bold text-sm whitespace-nowrap animate-in fade-in duration-500">
                                     Messages
@@ -100,12 +109,13 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                         </Link>
 
                         <Link 
-                            href="/friend" 
-                            className={`flex items-center justify-start gap-4 h-14 px-4 rounded-2xl transition-all duration-200 w-full ${
-                                activeTab === "friends" ? "bg-indigo-50 text-[#5D5FEF]" : "text-gray-300 hover:text-[#5D5FEF]"
+                            href="/friend"
+                            onClick={handleMenuClick}
+                            className={`flex items-center justify-start gap-4 h-14 px-4 rounded-2xl transition-all duration-200 w-full group ${
+                                activeTab === "friends" ? "bg-indigo-50 text-[#5D5FEF]" : "text-gray-300 hover:text-[#5D5FEF] hover:bg-indigo-50/50"
                             }`}
                         >
-                            <Users size={24} className="shrink-0" />
+                            <Users size={24} className="shrink-0 transition-transform duration-200 group-hover:scale-110" />
                             {isExpanded && (
                                 <span className="font-bold text-sm whitespace-nowrap animate-in fade-in duration-500">
                                     Friends
@@ -133,7 +143,7 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                             <div className="p-2">
                                 <button 
                                     onClick={handleLogout}
-                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-rose-50 text-rose-500 transition-colors"
+                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-rose-50 text-rose-500 hover:translate-x-1 active:scale-95"
                                 >
                                     <LogOut size={18} />
                                     <span className="text-xs font-bold">Logout</span>
@@ -144,7 +154,7 @@ export default function Sidebar({ activeTab }: SidebarProps) {
 
                     <button 
                         onClick={() => setShowSettings(!showSettings)}
-                        className={`flex items-center justify-start gap-4 h-14 px-4 rounded-2xl transition-all duration-200 w-full ${
+                        className={`flex items-center justify-start gap-4 h-14 px-4 rounded-2xl transition-all duration-200 w-full group ${
                             showSettings 
                             ? "bg-indigo-50 text-[#5D5FEF]" 
                             : "text-gray-300 hover:text-[#5D5FEF] hover:bg-indigo-50/50"
@@ -152,7 +162,7 @@ export default function Sidebar({ activeTab }: SidebarProps) {
                     >
                         <Settings 
                             size={24} 
-                            className={`shrink-0 transition-transform duration-300 ${showSettings ? 'rotate-90' : ''}`} 
+                            className={`shrink-0 transition-all duration-300 ${showSettings ? 'rotate-90' : 'group-hover:rotate-90'}`} 
                         />
                         {isExpanded && (
                             <span className="font-bold text-sm whitespace-nowrap animate-in fade-in duration-300">

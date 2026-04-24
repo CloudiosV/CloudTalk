@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Search } from 'lucide-react';
+import { Search, ArrowLeft } from 'lucide-react';
 
 interface ChatRoomProps {
   currentUser: any;
@@ -20,7 +20,6 @@ export default function ChatRoom({ currentUser, activeChat, onBack }: ChatRoomPr
   const [showSearch, setShowSearch] = useState(false);
   const [kataKunci, setKataKunci] = useState('');
 
-  // PERBAIKAN: Gunakan tanda tanya (?) supaya tidak error kalau data belum siap
   const isGroup = activeChat?.type === 'group';
   const chatTitle = isGroup ? activeChat?.groupName : activeChat?.username;
   const chatAvatar = chatTitle ? chatTitle.charAt(0).toUpperCase() : '?';
@@ -28,7 +27,7 @@ export default function ChatRoom({ currentUser, activeChat, onBack }: ChatRoomPr
   useEffect(() => {
     const fetchChatHistory = async () => {
       if (!currentUser?.id && !currentUser?._id) return;
-      if (!activeChat || !activeChat._id) return; // Pastikan data obrolan ada
+      if (!activeChat || !activeChat._id) return;
 
       try {
         const bodyPayload: any = { action: "get_chat" };
@@ -118,10 +117,20 @@ export default function ChatRoom({ currentUser, activeChat, onBack }: ChatRoomPr
   return (
     <div className="flex flex-col h-full bg-[#efeae2] font-sans relative w-full">
       
-      <header className="flex flex-col bg-white border-b border-gray-200 shadow-sm z-10 w-full absolute top-0">
+      <header className="flex flex-col bg-white border-b border-gray-200 shadow-sm z-10 w-full absolute top-0 transition-all duration-300">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold uppercase ${isGroup ? 'bg-rose-400' : 'bg-indigo-500'}`}>
+            {onBack && (
+              <button 
+                onClick={onBack}
+                className="md:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200 active:scale-95"
+              >
+                <ArrowLeft size={20} />
+              </button>
+            )}
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold uppercase transition-transform duration-300 hover:scale-105 ${
+              isGroup ? 'bg-rose-400' : 'bg-indigo-500'
+            }`}>
               {chatAvatar}
             </div>
             <div className="flex flex-col">
@@ -132,30 +141,32 @@ export default function ChatRoom({ currentUser, activeChat, onBack }: ChatRoomPr
 
           <button 
             onClick={() => { setShowSearch(!showSearch); setKataKunci(''); }}
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition"
+            className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
           >
             <Search size={20} />
           </button>
         </div>
 
         {showSearch && (
-          <div className="px-4 pb-3">
+          <div className="px-4 pb-3 animate-in slide-in-from-top-2 fade-in duration-200">
             <input
               type="text"
               value={kataKunci}
               onChange={(e) => setKataKunci(e.target.value)}
               placeholder="Cari pesan di obrolan ini..."
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5D5FEF]/50 text-sm"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5D5FEF]/50 focus:border-transparent transition-all duration-200 text-sm"
             />
           </div>
         )}
       </header>
 
-      <main className={`flex-1 p-4 overflow-y-auto mb-[72px] ${showSearch ? 'mt-[124px]' : 'mt-[72px]'} transition-all duration-300 w-full`}>
+      <main className={`flex-1 p-4 overflow-y-auto mb-[72px] ${
+        showSearch ? 'mt-[124px]' : 'mt-[72px]'
+      } transition-all duration-300 w-full`}>
         <div className="flex flex-col space-y-4">
           
           {daftarPesan.length === 0 && (
-            <p className="text-center text-gray-500 bg-white/50 py-2 rounded-lg text-sm mx-auto w-max px-4 shadow-sm border border-white">
+            <p className="text-center text-gray-500 bg-white/50 py-2 rounded-lg text-sm mx-auto w-max px-4 shadow-sm border border-white animate-in fade-in duration-500">
               Belum ada pesan. Ucapkan halo!
             </p>
           )}
@@ -166,16 +177,18 @@ export default function ChatRoom({ currentUser, activeChat, onBack }: ChatRoomPr
             const isSaya = senderIdStr === currentUserIdStr;
 
             return (
-              <div key={index} className={`flex flex-col ${isSaya ? 'items-end' : 'items-start'} w-full`}>
-                
-                {/* TAMPILKAN NAMA PENGIRIM DI GRUP */}
+              <div 
+                key={index} 
+                className={`flex flex-col ${isSaya ? 'items-end' : 'items-start'} w-full animate-in fade-in slide-in-from-bottom-2 duration-300`}
+                style={{ animationDelay: `${index * 30}ms` }}
+              >
                 {isGroup && !isSaya && (
                   <span className="text-[11px] font-bold text-gray-500 ml-2 mb-1">
                     {pesan.senderName}
                   </span>
                 )}
 
-                <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl shadow-sm ${
+                <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md ${
                   isSaya ? 'bg-[#5D5FEF] text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
                 }`}>
                   <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">{pesan.teks}</p>
@@ -197,12 +210,12 @@ export default function ChatRoom({ currentUser, activeChat, onBack }: ChatRoomPr
             value={pesanInput}
             onChange={(e) => setPesanInput(e.target.value)}
             placeholder={`Ketik pesan...`}
-            className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5D5FEF]/50 text-sm"
+            className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#5D5FEF]/50 focus:border-transparent transition-all duration-200 text-sm"
           />
           <button 
             type="submit" 
             disabled={!pesanInput.trim()} 
-            className="px-6 py-3 bg-[#5D5FEF] text-white font-bold rounded-2xl hover:bg-indigo-600 disabled:opacity-50 transition active:scale-95"
+            className="px-6 py-3 bg-[#5D5FEF] text-white font-bold rounded-2xl transition-all duration-300 hover:bg-indigo-600 disabled:opacity-50 disabled:hover:bg-[#5D5FEF] active:scale-95"
           >
             Kirim
           </button>
