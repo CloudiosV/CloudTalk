@@ -338,7 +338,7 @@ export default function ChatPage() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl animate-in zoom-in-95">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">Buat Grup Baru</h2>
+              <h2 className="text-xl font-bold text-gray-600">Buat Grup Baru</h2>
               <button onClick={() => setShowGroupModal(false)} className="text-gray-400 hover:text-rose-500"><X size={24}/></button>
             </div>
             
