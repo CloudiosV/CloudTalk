@@ -1,18 +1,18 @@
 "use client";
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react"; // Import icon mata
+import { Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // State untuk toggle mata
+  const [showPassword, setShowPassword] = useState(false); 
   const [statusMsg, setStatusMsg] = useState({ text: "", type: "" }); 
   
   const [formData, setFormData] = useState({ 
     username: "", 
     email: "", 
     password: "",
-    confirmPassword: "" // Tambahkan field konfirmasi
+    confirmPassword: "" 
   });
 
   const resetForm = () => {
@@ -22,7 +22,6 @@ export default function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validasi tambahan: Cek kecocokan password saat register
     if (!isLogin && formData.password !== formData.confirmPassword) {
       setStatusMsg({ text: "Password tidak cocok!", type: "error" });
       return;
@@ -71,28 +70,38 @@ export default function AuthPage() {
     <div className="flex h-screen w-full items-center justify-center bg-[#F3F1FF] p-4 font-sans">
       <div className="flex w-full max-w-6xl min-h-[600px] bg-white/60 backdrop-blur-lg rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(93,95,239,0.1)]">
         
-        <div className="hidden md:flex w-[50%] p-16 flex-col justify-between items-start relative bg-gradient-to-br from-[#5D5FEF] to-[#4A4CD9] text-white">
-          <div className="z-10">
+        {/* PANEL KIRI (GAMBAR) */}
+        <div className="hidden md:flex w-[50%] p-12 flex-col relative bg-gradient-to-br from-[#5D5FEF] to-[#4A4CD9] text-white overflow-hidden">
+          
+          {/* Logo Dikunci di Atas */}
+          <div className="z-10 absolute top-12 left-12">
             <h1 className="text-3xl font-black tracking-tighter">CloudTalk.</h1>
           </div>
           
-          <div className="z-10 w-full flex flex-col items-center">
-            <div className="relative group">
+          {/* Gambar Dikunci Persis di Tengah dengan Ukuran Super Besar */}
+          <div className="z-10 flex-1 flex flex-col items-center justify-center w-full mt-10">
+            {/* Container sedikit dibesarkan (w-72 h-72) */}
+            <div className="relative w-72 h-72 flex items-center justify-center group">
+              {/* Gambar di-zoom sangat besar pakai scale-[1.8] */}
               <img 
                 src="/images/authIcon.png" 
                 alt="Illustration"
-                className="relative w-80 h-80 object-contain transform transition duration-500 hover:scale-105" 
+                className="relative w-full h-full object-contain transform scale-[1.8] transition duration-500 group-hover:scale-[1.9]" 
               />
             </div>
-            <div className="mt-8 text-center">
-              <h3 className="text-2xl font-bold mb-2">Better together</h3>
-              <p className="text-indigo-100/80 font-light max-w-xs mx-auto">
-                Join thousands of people connecting in a more meaningful way.
-              </p>
-            </div>
           </div>
+
+          {/* Teks Dikunci di Bawah */}
+          <div className="z-10 w-full text-center mt-auto pb-4">
+            <h3 className="text-2xl font-bold mb-2">Better together</h3>
+            <p className="text-indigo-100/80 font-light max-w-xs mx-auto">
+              Join thousands of people connecting in a more meaningful way.
+            </p>
+          </div>
+
         </div>
 
+        {/* PANEL KANAN (FORM) */}
         <div className="w-full md:w-[50%] p-8 md:p-20 flex flex-col justify-center bg-white">
           <div className="max-w-sm mx-auto w-full">
             
@@ -119,7 +128,7 @@ export default function AuthPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isLogin ? 'max-h-0 opacity-0' : 'max-h-20 opacity-100'}`}>
+              <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isLogin ? 'max-h-0 opacity-0' : 'max-h-24 opacity-100'}`}>
                 <label className="text-xs font-bold text-gray-400 ml-2 mb-1 block uppercase tracking-wider">Username</label>
                 <input 
                   type="text" 
@@ -154,7 +163,6 @@ export default function AuthPage() {
                     className="w-full px-6 py-4 rounded-2xl bg-[#F8F9FD] border-2 border-transparent focus:border-[#5D5FEF] focus:bg-white outline-none transition-all text-sm text-gray-700 placeholder:text-gray-300"
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
                   />
-                  {/* Icon Mata */}
                   <button 
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -165,20 +173,18 @@ export default function AuthPage() {
                 </div>
               </div>
 
-              {/* Confirm Password Field (Hanya muncul saat Register) */}
-              {!isLogin && (
-                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                  <label className="text-xs font-bold text-gray-400 ml-2 mb-1 block uppercase tracking-wider">Confirm Password</label>
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    placeholder="••••••••"
-                    value={formData.confirmPassword}
-                    required={!isLogin}
-                    className="w-full px-6 py-4 rounded-2xl bg-[#F8F9FD] border-2 border-transparent focus:border-[#5D5FEF] focus:bg-white outline-none transition-all text-sm text-gray-700 placeholder:text-gray-300"
-                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                  />
-                </div>
-              )}
+              {/* Confirm Password Field */}
+              <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isLogin ? 'max-h-0 opacity-0' : 'max-h-24 opacity-100'}`}>
+                <label className="text-xs font-bold text-gray-400 ml-2 mb-1 block uppercase tracking-wider">Confirm Password</label>
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  placeholder="••••••••"
+                  value={formData.confirmPassword}
+                  required={!isLogin}
+                  className="w-full px-6 py-4 rounded-2xl bg-[#F8F9FD] border-2 border-transparent focus:border-[#5D5FEF] focus:bg-white outline-none transition-all text-sm text-gray-700 placeholder:text-gray-300"
+                  onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                />
+              </div>
 
               <button 
                 disabled={loading}
@@ -197,13 +203,14 @@ export default function AuthPage() {
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setStatusMsg({ text: "", type: "" });
-                  setShowPassword(false); // Reset mata saat pindah mode
+                  setShowPassword(false);
                 }}
                 className="ml-2 text-[#5D5FEF] font-extrabold hover:text-[#4d4fdf] transition-colors underline decoration-2 underline-offset-8"
               >
                 {isLogin ? "Create an account" : "Log in to account"}
               </button>
             </div>
+            
           </div>
         </div>
       </div>
