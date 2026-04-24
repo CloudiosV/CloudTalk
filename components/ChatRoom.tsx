@@ -6,10 +6,11 @@ import { Search } from 'lucide-react';
 
 interface ChatRoomProps {
   currentUser: any;
-  activeChat: any; // Menerima data grup ATAU data teman
+  activeChat: any; 
+  onBack?: () => void; 
 }
 
-export default function ChatRoom({ currentUser, activeChat }: ChatRoomProps) {
+export default function ChatRoom({ currentUser, activeChat, onBack }: ChatRoomProps) {
   const [pesanInput, setPesanInput] = useState('');
   const [daftarPesan, setDaftarPesan] = useState<any[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);

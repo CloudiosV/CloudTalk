@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from '@/components/Sidebar';
 import ChatRoom from '@/components/ChatRoom';
-import { MessageSquare, Plus, X, Users as UsersIcon } from 'lucide-react';
+import { MessageSquare, Plus, X, Users as UsersIcon, Check } from 'lucide-react'; // BARU: Import Check buat Toast
 import { io, Socket } from 'socket.io-client';
 
 export default function ChatPage() {
@@ -12,7 +12,6 @@ export default function ChatPage() {
   const [myGroups, setMyGroups] = useState<any[]>([]); 
   const [activeChat, setActiveChat] = useState<any>(null); 
   
-  // State untuk Notifikasi
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const activeChatRef = useRef(activeChat); 
   const socketRef = useRef<Socket | null>(null);
@@ -22,22 +21,24 @@ export default function ChatPage() {
   const [selectedFriendsForGroup, setSelectedFriendsForGroup] = useState<string[]>([]);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
 
-  // 1. Tarik notifikasi dari LocalStorage saat user berhasil load
+  // BARU: State Toast
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000); 
+  };
+
   useEffect(() => {
     if (currentUser) {
       const userId = currentUser._id || currentUser.id;
       const savedNotifs = localStorage.getItem(`notifs_${userId}`);
       if (savedNotifs) {
-        try {
-          setUnreadCounts(JSON.parse(savedNotifs));
-        } catch (e) {
-          console.error("Gagal membaca notifikasi lama");
-        }
+        try { setUnreadCounts(JSON.parse(savedNotifs)); } 
+        catch (e) { console.error("Gagal membaca notifikasi lama"); }
       }
     }
   }, [currentUser]);
 
-  // 2. Simpan (Backup) notifikasi ke LocalStorage setiap kali angkanya berubah
   useEffect(() => {
     if (currentUser) {
       const userId = currentUser._id || currentUser.id;
@@ -45,19 +46,17 @@ export default function ChatPage() {
     }
   }, [unreadCounts, currentUser]);
 
-  // 3. Update referensi chat & Hapus angka merah saat chat dibuka
   useEffect(() => {
     activeChatRef.current = activeChat;
     if (activeChat) {
       setUnreadCounts(prev => {
         const newCounts = { ...prev };
-        delete newCounts[activeChat._id]; // Hapus angka merah karena sudah dibaca
+        delete newCounts[activeChat._id]; 
         return newCounts;
       });
     }
   }, [activeChat]);
 
-  // 4. Inisialisasi Auth & Socket Global
   useEffect(() => {
     const initApp = async () => {
       try {
@@ -78,16 +77,23 @@ export default function ChatPage() {
             socket.emit('register-user', userId);
           });
 
-          // === LOGIKA WHATSAPP: NOTIF & GESER KE ATAS ===
+          // BARU: Dengerin sinyal jika ada yang accept friend request
+          socket.on('refresh-friend-data', (payload) => {
+            if (payload.senderId === userId || payload.receiverId === userId) {
+              fetchFriendsAndGroups(userId);
+            }
+          });
+
+          // BARU: Dengerin sinyal jika kita di-invite ke grup baru
+          socket.on('refresh-chat-list', () => {
+            fetchFriendsAndGroups(userId);
+          });
+
           socket.on('update-sidebar', (payload) => {
-            console.log("🔔 Sinyal notif masuk:", payload);
             const currentActiveId = activeChatRef.current?._id;
-            
-            // Cari tahu ID lawan bicara (Penting untuk membedakan private dan grup)
             const friendId = payload.participants?.find((id: string) => id !== userId) || payload.senderId;
             const targetId = payload.isGroup ? payload.conversationId : friendId;
 
-            // A. TAMBAH ANGKA MERAH JIKA BUKAN KITA YANG NGIRIM & CHAT SEDANG DITUTUP
             if (payload.senderId !== userId && currentActiveId !== targetId) {
               setUnreadCounts(prev => ({
                 ...prev,
@@ -95,7 +101,6 @@ export default function ChatPage() {
               }));
             }
 
-            // B. GESER CHAT KE PALING ATAS SECARA INSTAN
             if (payload.isGroup) {
               setMyGroups(prevGroups => {
                 const groupIndex = prevGroups.findIndex(g => g._id === payload.conversationId);
@@ -104,7 +109,7 @@ export default function ChatPage() {
                 const updatedGroup = { ...prevGroups[groupIndex], lastMessage: payload.lastMessage, updatedAt: new Date().toISOString() };
                 const newArray = [...prevGroups];
                 newArray.splice(groupIndex, 1);
-                return [updatedGroup, ...newArray]; // Taruh Index 0
+                return [updatedGroup, ...newArray]; 
               });
             } else {
               setFriends(prevFriends => {
@@ -114,7 +119,7 @@ export default function ChatPage() {
                 const updatedFriend = { ...prevFriends[friendIndex], lastMessage: payload.lastMessage, updatedAt: new Date().toISOString() };
                 const newArray = [...prevFriends];
                 newArray.splice(friendIndex, 1);
-                return [updatedFriend, ...newArray]; // Taruh Index 0
+                return [updatedFriend, ...newArray]; 
               });
             }
           });
@@ -129,22 +134,17 @@ export default function ChatPage() {
     return () => { socketRef.current?.disconnect(); };
   }, []);
 
-  // === FUNGSI FETCH YANG TAHAN REFRESH ===
   const fetchFriendsAndGroups = async (userId: string) => {
     try {
-      // Ambil daftar teman dasar
       const resFriend = await fetch(`/api/friend?userId=${userId}`, {credentials: 'include'});
       let friendsData = resFriend.ok ? (await resFriend.json()).friends : [];
 
-      // Ambil riwayat chat lengkap (termasuk pesan terakhir)
       const resChat = await fetch(`/api/chat?userId=${userId}`, {credentials: 'include'});
       const chatsData = resChat.ok ? (await resChat.json()).conversations : [];
 
-      // Pisahkan mana yang grup mana yang private
       const groups = chatsData.filter((c: any) => c.isGroup);
       const privateChats = chatsData.filter((c: any) => !c.isGroup);
 
-      // Tempelkan lastMessage dari riwayat chat ke daftar teman
       const enrichedFriends = friendsData.map((friend: any) => {
         const chat = privateChats.find((c: any) => c.participants.includes(friend._id) && c.participants.includes(userId));
         return {
@@ -154,7 +154,6 @@ export default function ChatPage() {
         };
       });
 
-      // Urutkan dari yang paling baru di-chat
       const sortedFriends = enrichedFriends.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
       const sortedGroups = groups.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
@@ -173,6 +172,7 @@ export default function ChatPage() {
     if (!newGroupName.trim() || selectedFriendsForGroup.length < 1) return;
     setIsCreatingGroup(true);
     try {
+      const adminId = currentUser._id || currentUser.id;
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -180,29 +180,44 @@ export default function ChatPage() {
           action: "create_group",
           name: newGroupName,
           members: selectedFriendsForGroup,
-          adminId: currentUser._id || currentUser.id
+          adminId: adminId
         })
       });
       if (res.ok) {
-        alert("Grup berhasil dibuat!");
+        showToast("Grup berhasil dibuat!"); // BARU: Pake Toast
         setShowGroupModal(false);
         setNewGroupName('');
+        
+        // BARU: Emit socket untuk auto-refresh layar semua member grup
+        socketRef.current?.emit('new-group-created', [...selectedFriendsForGroup, adminId]);
+
         setSelectedFriendsForGroup([]);
-        fetchFriendsAndGroups(currentUser._id || currentUser.id);
+        fetchFriendsAndGroups(adminId);
       }
-    } catch (error) { console.error("Gagal bikin grup"); }
+    } catch (error) { showToast("Gagal membuat grup", "error"); }
     finally { setIsCreatingGroup(false); }
   };
 
   if (!currentUser) return <div className="p-8 text-center">Loading...</div>;
 
   return (
-    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
-      <Sidebar activeTab="chats" />
+    <div className="flex flex-col-reverse md:flex-row h-screen bg-gray-50 font-sans overflow-hidden relative">
+      
+      {/* BARU: TOAST NOTIFICATION DI HALAMAN CHAT */}
+      {toast && (
+        <div className={`absolute top-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3 animate-in slide-in-from-top-5 fade-in duration-300 ${toast.type === 'success' ? 'bg-[#5D5FEF] text-white' : 'bg-rose-500 text-white'}`}>
+          {toast.type === 'success' ? <Check size={20} /> : <X size={20} />}
+          <span className="font-bold text-sm">{toast.message}</span>
+        </div>
+      )}
 
-      <aside className="w-80 bg-white border-r border-gray-200 flex flex-col z-10 shadow-sm shrink-0">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-          <h2 className="text-2xl font-black text-gray-800">Messages</h2>
+      <div className={`${activeChat ? 'hidden md:block' : 'block'} shrink-0 z-50`}>
+        <Sidebar activeTab="chats" />
+      </div>
+
+      <aside className={`w-full md:w-80 bg-white border-r border-gray-200 flex-col z-10 shadow-sm shrink-0 ${activeChat ? 'hidden md:flex' : 'flex flex-1 md:flex-none'}`}>
+        <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center shrink-0">
+          <h2 className="text-xl md:text-2xl font-black text-gray-800">Messages</h2>
           <button 
             onClick={() => setShowGroupModal(true)}
             className="p-2 bg-indigo-50 text-[#5D5FEF] rounded-full hover:bg-[#5D5FEF] hover:text-white transition"
@@ -212,12 +227,10 @@ export default function ChatPage() {
           </button>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          
-          {/* List Grup */}
+        <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-4">
           {myGroups.length > 0 && (
             <div>
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Grup Saya</h3>
+              <h3 className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Grup Saya</h3>
               {myGroups.map((group) => {
                 const unread = unreadCounts[group._id] || 0;
                 return (
@@ -228,18 +241,17 @@ export default function ChatPage() {
                       activeChat?._id === group._id ? 'bg-indigo-50 border border-indigo-100 shadow-sm' : 'hover:bg-gray-50'
                     }`}
                   >
-                    <div className="h-12 w-12 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center font-bold shrink-0">
+                    <div className="h-10 w-10 md:h-12 md:w-12 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center font-bold shrink-0">
                       <UsersIcon size={20} />
                     </div>
                     <div className="flex-1 overflow-hidden">
-                      <p className={`font-bold truncate ${activeChat?._id === group._id ? 'text-[#5D5FEF]' : 'text-gray-800'}`}>
+                      <p className={`font-bold text-sm md:text-base truncate ${activeChat?._id === group._id ? 'text-[#5D5FEF]' : 'text-gray-800'}`}>
                         {group.groupName}
                       </p>
-                      <p className={`text-xs truncate ${unread > 0 ? 'text-gray-800 font-bold' : 'text-gray-500'}`}>
+                      <p className={`text-[10px] md:text-xs truncate ${unread > 0 ? 'text-gray-800 font-bold' : 'text-gray-500'}`}>
                         {group.lastMessage || 'Mulai obrolan...'}
                       </p>
                     </div>
-                    {/* BADGE NOTIFIKASI */}
                     {unread > 0 && (
                       <div className="bg-rose-500 text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full shrink-0">
                         {unread}
@@ -251,9 +263,8 @@ export default function ChatPage() {
             </div>
           )}
 
-          {/* List Teman Private */}
           <div>
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Teman Private</h3>
+            <h3 className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Teman Private</h3>
             {friends.length === 0 ? (
               <p className="text-gray-400 text-sm text-center mt-4">Belum ada teman.</p>
             ) : (
@@ -267,18 +278,17 @@ export default function ChatPage() {
                       activeChat?._id === friend._id ? 'bg-indigo-50 border border-indigo-100 shadow-sm' : 'hover:bg-gray-50'
                     }`}
                   >
-                    <div className="h-12 w-12 bg-indigo-100 text-[#5D5FEF] rounded-full flex items-center justify-center font-bold uppercase shrink-0">
+                    <div className="h-10 w-10 md:h-12 md:w-12 bg-indigo-100 text-[#5D5FEF] rounded-full flex items-center justify-center font-bold uppercase shrink-0">
                       {friend.username?.charAt(0)}
                     </div>
                     <div className="flex-1 overflow-hidden">
-                      <p className={`font-bold truncate ${activeChat?._id === friend._id ? 'text-[#5D5FEF]' : 'text-gray-800'}`}>
+                      <p className={`font-bold text-sm md:text-base truncate ${activeChat?._id === friend._id ? 'text-[#5D5FEF]' : 'text-gray-800'}`}>
                         {friend.username}
                       </p>
-                      <p className={`text-xs truncate ${unread > 0 ? 'text-gray-800 font-bold' : 'text-gray-500'}`}>
+                      <p className={`text-[10px] md:text-xs truncate ${unread > 0 ? 'text-gray-800 font-bold' : 'text-gray-500'}`}>
                         {friend.lastMessage}
                       </p>
                     </div>
-                    {/* BADGE NOTIFIKASI */}
                     {unread > 0 && (
                       <div className="bg-[#5D5FEF] text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full shrink-0">
                         {unread}
@@ -289,19 +299,18 @@ export default function ChatPage() {
               })
             )}
           </div>
-
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col bg-[#efeae2]">
+      <main className={`flex-1 flex-col bg-[#efeae2] w-full ${activeChat ? 'flex' : 'hidden md:flex'}`}>
         {activeChat ? (
-          <ChatRoom currentUser={currentUser} activeChat={activeChat} /> 
+          <ChatRoom currentUser={currentUser} activeChat={activeChat} onBack={() => setActiveChat(null)} /> 
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
             <div className="h-24 w-24 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
               <MessageSquare size={40} className="text-gray-300" />
             </div>
-            <p className="font-medium">Pilih teman atau grup untuk mulai mengobrol</p>
+            <p className="font-medium text-sm md:text-base">Pilih teman atau grup untuk mulai mengobrol</p>
           </div>
         )}
       </main>
@@ -309,7 +318,7 @@ export default function ChatPage() {
       {/* MODAL BIKIN GRUP */}
       {showGroupModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl animate-in zoom-in-95">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Buat Grup Baru</h2>
               <button onClick={() => setShowGroupModal(false)} className="text-gray-400 hover:text-rose-500"><X size={24}/></button>
@@ -320,7 +329,7 @@ export default function ChatPage() {
               placeholder="Nama Grup..."
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl mb-4 focus:ring-2 focus:ring-[#5D5FEF]"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-600 rounded-xl mb-4 focus:ring-2 focus:ring-[#5D5FEF]" // BARU: text-gray-600
             />
 
             <p className="text-sm font-bold text-gray-500 mb-2">Pilih Anggota:</p>
@@ -333,7 +342,7 @@ export default function ChatPage() {
                     onChange={() => toggleFriendSelection(f._id)}
                     className="w-5 h-5 rounded text-[#5D5FEF]"
                   />
-                  <span className="font-medium">{f.username}</span>
+                  <span className="font-medium text-gray-600 text-sm">{f.username}</span> {/* BARU: text-gray-600 */}
                 </label>
               ))}
             </div>

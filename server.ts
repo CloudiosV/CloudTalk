@@ -18,7 +18,6 @@ app.prepare().then(() => {
   
   const io = new Server(httpServer, {
     cors: {
-      // DINAMIS: Bisa localhost, bisa IP VPS, bisa domain baru kamu
       origin: [
         "http://localhost:3002", 
         "http://43.157.229.130:3002", 
@@ -31,8 +30,6 @@ app.prepare().then(() => {
   });
 
   io.on('connection', (socket) => {
-    // 0. Fitur Notifikasi: User join ke room pribadinya sendiri berdasarkan User ID
-    // Ini penting supaya kita bisa tembak notifikasi ke user spesifik meskipun dia gak di room chat
     socket.on('register-user', (userId) => {
       socket.join(userId);
       console.log(`User ${userId} terdaftar untuk notifikasi`);
@@ -52,7 +49,6 @@ app.prepare().then(() => {
           text: data.teks,
         });
 
-        // 1. Update Conversation di DB
         const updatedConv = await Conversation.findByIdAndUpdate(
           data.conversationId,
           {
@@ -62,16 +58,14 @@ app.prepare().then(() => {
           { new: true }
         ).populate('participants', '_id');
 
-        // 2. Kirim pesan ke room (untuk yang lagi buka chat)
         io.to(data.conversationId).emit('pesan-baru', {
           id: pesanBaru._id,
           teks: pesanBaru.text,
           senderId: pesanBaru.sender,
-          senderName: data.senderName, // Opsional
+          senderName: data.senderName, 
           waktu: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
 
-        // 3. FITUR NOTIFIKASI: Teriak ke semua peserta biar sidebar mereka update
         if (updatedConv && updatedConv.participants) {
           updatedConv.participants.forEach((participant: any) => {
             const pId = participant._id.toString();
@@ -79,7 +73,7 @@ app.prepare().then(() => {
               conversationId: data.conversationId,
               isGroup: updatedConv.isGroup,
               senderId: data.senderId,
-              participants: updatedConv.participants.map((p: any) => p._id.toString()), // BARU: Kirim daftar peserta
+              participants: updatedConv.participants.map((p: any) => p._id.toString()), 
               lastMessage: data.teks,
               waktu: new Date()
             });
@@ -91,8 +85,16 @@ app.prepare().then(() => {
       }
     });
 
-    // Fitur Friend Request tetap sama
     socket.on('friend-data-updated', (data) => io.emit('refresh-friend-data', data));
+
+    // BARU: Sinyal real-time ketika grup dibuat
+    socket.on('new-group-created', (participants) => {
+      if (Array.isArray(participants)) {
+        participants.forEach((pId) => {
+          io.to(pId).emit('refresh-chat-list'); // Tembak langsung ke ID anggota
+        });
+      }
+    });
 
     socket.on('disconnect', () => {});
   });
